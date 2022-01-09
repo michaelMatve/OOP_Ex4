@@ -1,3 +1,4 @@
+import json
 from unittest import TestCase
 from client_python.GraphAlgo import GraphAlgo
 
@@ -41,7 +42,105 @@ class TestGraphAlgo(TestCase):
         my_algo_in = self.make_my_graph()
         my_algo_in.save_to_json('testLoad.json')
         my_algo_js = GraphAlgo()
-        self.assertEqual(my_algo_js.load_from_json('testLoad.json'),True)
+        temp = json.dumps({
+    "Edges": [
+        {
+            "src": 0,
+            "w": 1.2,
+            "dest": 2
+        },
+        {
+            "src": 2,
+            "w": 2.5,
+            "dest": 0
+        },
+        {
+            "src": 2,
+            "w": 1.8,
+            "dest": 10
+        },
+        {
+            "src": 5,
+            "w": 0.2,
+            "dest": 7
+        },
+        {
+            "src": 6,
+            "w": 1.3,
+            "dest": 2
+        },
+        {
+            "src": 6,
+            "w": 1.4,
+            "dest": 5
+        },
+        {
+            "src": 7,
+            "w": 2.6,
+            "dest": 13
+        },
+        {
+            "src": 10,
+            "w": 1.1,
+            "dest": 6
+        },
+        {
+            "src": 10,
+            "w": 1.32,
+            "dest": 7
+        },
+        {
+            "src": 10,
+            "w": 1.0,
+            "dest": 12
+        },
+        {
+            "src": 12,
+            "w": 1.7,
+            "dest": 13
+        },
+        {
+            "src": 13,
+            "w": 1.85,
+            "dest": 10
+        }
+    ],
+    "Nodes": [
+        {
+            "pos": "1.1,1.5,0",
+            "id": 0
+        },
+        {
+            "pos": "1.4,1.3,0",
+            "id": 2
+        },
+        {
+            "pos": "1.1,0.5,0",
+            "id": 5
+        },
+        {
+            "pos": "1.3,1,0",
+            "id": 6
+        },
+        {
+            "pos": "1.5,0.8,0",
+            "id": 7
+        },
+        {
+            "pos": "2.0,1.1,0",
+            "id": 10
+        },
+        {
+            "pos": "2.5,1.4,0",
+            "id": 12
+        },
+        {
+            "pos": "1.3,0.3,0",
+            "id": 13
+        }
+    ]
+})
+        self.assertEqual(my_algo_js.load_from_json(temp),True)
         self.assertEqual(my_algo_js.graph.num_edges,my_algo_in.graph.num_edges)
         self.assertEqual(my_algo_js.graph.num_nodes, my_algo_in.graph.num_nodes)
         self.assertEqual(my_algo_js.graph.nodes.get(0).out_edges.get(2), my_algo_in.graph.nodes.get(0).out_edges.get(2))
@@ -58,7 +157,105 @@ class TestGraphAlgo(TestCase):
         my_algo_in = self.make_my_graph()
         my_algo_in.save_to_json('testLoad.json')
         my_algo_js = GraphAlgo()
-        self.assertEqual(my_algo_js.load_from_json('testLoad.json'), True)
+        temp = json.dumps({
+            "Edges": [
+                {
+                    "src": 0,
+                    "w": 1.2,
+                    "dest": 2
+                },
+                {
+                    "src": 2,
+                    "w": 2.5,
+                    "dest": 0
+                },
+                {
+                    "src": 2,
+                    "w": 1.8,
+                    "dest": 10
+                },
+                {
+                    "src": 5,
+                    "w": 0.2,
+                    "dest": 7
+                },
+                {
+                    "src": 6,
+                    "w": 1.3,
+                    "dest": 2
+                },
+                {
+                    "src": 6,
+                    "w": 1.4,
+                    "dest": 5
+                },
+                {
+                    "src": 7,
+                    "w": 2.6,
+                    "dest": 13
+                },
+                {
+                    "src": 10,
+                    "w": 1.1,
+                    "dest": 6
+                },
+                {
+                    "src": 10,
+                    "w": 1.32,
+                    "dest": 7
+                },
+                {
+                    "src": 10,
+                    "w": 1.0,
+                    "dest": 12
+                },
+                {
+                    "src": 12,
+                    "w": 1.7,
+                    "dest": 13
+                },
+                {
+                    "src": 13,
+                    "w": 1.85,
+                    "dest": 10
+                }
+            ],
+            "Nodes": [
+                {
+                    "pos": "1.1,1.5,0",
+                    "id": 0
+                },
+                {
+                    "pos": "1.4,1.3,0",
+                    "id": 2
+                },
+                {
+                    "pos": "1.1,0.5,0",
+                    "id": 5
+                },
+                {
+                    "pos": "1.3,1,0",
+                    "id": 6
+                },
+                {
+                    "pos": "1.5,0.8,0",
+                    "id": 7
+                },
+                {
+                    "pos": "2.0,1.1,0",
+                    "id": 10
+                },
+                {
+                    "pos": "2.5,1.4,0",
+                    "id": 12
+                },
+                {
+                    "pos": "1.3,0.3,0",
+                    "id": 13
+                }
+            ]
+        })
+        self.assertEqual(my_algo_js.load_from_json(temp), True)
         self.assertEqual(my_algo_js.graph.num_edges, my_algo_in.graph.num_edges)
         self.assertEqual(my_algo_js.graph.num_nodes, my_algo_in.graph.num_nodes)
         self.assertEqual(my_algo_js.graph.nodes.get(0).out_edges.get(2), my_algo_in.graph.nodes.get(0).out_edges.get(2))
@@ -110,9 +307,6 @@ class TestGraphAlgo(TestCase):
 
 
 
-    def test_plot_graph(self):
-        my_algo_in = self.make_my_graph()
-        my_algo_in.plot_graph()
 
     def test_random_pos(self):
         my_algo_in = self.make_my_graph()
