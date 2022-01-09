@@ -26,22 +26,44 @@ pygame.font.init()
 client = Client()
 client.start_connection(HOST, PORT)
 
-pokemons = client.get_pokemons()
-pokemons_obj = json.loads(pokemons, object_hook=lambda d: SimpleNamespace(**d))
+FONT = pygame.font.SysFont('Arial', 20, bold=True)
 
-print(pokemons)
+
+"""
+from here you can change
+"""
+
+"""
+make mygame object
+"""
+
+"""
+get info of game to object
+"""
+
+
+"""
+get the graph 
 
 graph_json = client.get_graph()
-
-FONT = pygame.font.SysFont('Arial', 20, bold=True)
-# load the json string into SimpleNamespace Object
-
-graph = json.loads(graph_json, object_hook=lambda json_dict: SimpleNamespace(**json_dict))
-
+graph = json.loads(graph_json, object_hook=lambda json_dict: SimpleNamespace(**json_dict)) # make graph
 for n in graph.Nodes:
     x, y, _ = n.pos.split(',')
     n.pos = SimpleNamespace(x=float(x), y=float(y))
+"""
 
+
+"""
+get all the pokemons:
+
+pokemons = client.get_pokemons()
+pokemons_obj = json.loads(pokemons, object_hook=lambda d: SimpleNamespace(**d)) # make pokemon list?
+print(pokemons)
+"""
+
+
+# load the json string into SimpleNamespace Object
+"""make scale"""
  # get data proportions
 min_x = min(list(graph.Nodes), key=lambda n: n.pos.x).pos.x
 min_y = min(list(graph.Nodes), key=lambda n: n.pos.y).pos.y
@@ -67,11 +89,14 @@ def my_scale(data, x=False, y=False):
 
 
 radius = 15
-
+"""
+# make all agents dick
+get all agent
 client.add_agent("{\"id\":0}")
 # client.add_agent("{\"id\":1}")
 # client.add_agent("{\"id\":2}")
 # client.add_agent("{\"id\":3}")
+"""
 
 # this commnad starts the server - the game is running now
 client.start()
@@ -86,15 +111,12 @@ while client.is_running() == 'true':
     pokemons = [p.Pokemon for p in pokemons]
     for p in pokemons:
         x, y, _ = p.pos.split(',')
-        p.pos = SimpleNamespace(x=my_scale(
-            float(x), x=True), y=my_scale(float(y), y=True))
-    agents = json.loads(client.get_agents(),
-                        object_hook=lambda d: SimpleNamespace(**d)).Agents
+        p.pos = SimpleNamespace(x=my_scale(float(x), x=True), y=my_scale(float(y), y=True))
+    agents = json.loads(client.get_agents(),object_hook=lambda d: SimpleNamespace(**d)).Agents
     agents = [agent.Agent for agent in agents]
     for a in agents:
         x, y, _ = a.pos.split(',')
-        a.pos = SimpleNamespace(x=my_scale(
-            float(x), x=True), y=my_scale(float(y), y=True))
+        a.pos = SimpleNamespace(x=my_scale(float(x), x=True), y=my_scale(float(y), y=True))
     # check events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -110,10 +132,8 @@ while client.is_running() == 'true':
         y = my_scale(n.pos.y, y=True)
 
         # its just to get a nice antialiased circle
-        gfxdraw.filled_circle(screen, int(x), int(y),
-                              radius, Color(64, 80, 174))
-        gfxdraw.aacircle(screen, int(x), int(y),
-                         radius, Color(255, 255, 255))
+        gfxdraw.filled_circle(screen, int(x), int(y),radius, Color(64, 80, 174))
+        gfxdraw.aacircle(screen, int(x), int(y),radius, Color(255, 255, 255))
 
         # draw the node id
         id_srf = FONT.render(str(n.id), True, Color(255, 255, 255))
@@ -133,16 +153,13 @@ while client.is_running() == 'true':
         dest_y = my_scale(dest.pos.y, y=True)
 
         # draw the line
-        pygame.draw.line(screen, Color(61, 72, 126),
-                         (src_x, src_y), (dest_x, dest_y))
+        pygame.draw.line(screen, Color(61, 72, 126),(src_x, src_y), (dest_x, dest_y))
 
     # draw agents
     for agent in agents:
-        pygame.draw.circle(screen, Color(122, 61, 23),
-                           (int(agent.pos.x), int(agent.pos.y)), 10)
+        pygame.draw.circle(screen, Color(122, 61, 23),(int(agent.pos.x), int(agent.pos.y)), 10)
     # draw pokemons (note: should differ (GUI wise) between the up and the down pokemons (currently they are marked in the same way).
-    for p in pokemons:
-        pygame.draw.circle(screen, Color(0, 255, 255), (int(p.pos.x), int(p.pos.y)), 10)
+    for p in pokemons:pygame.draw.circle(screen, Color(0, 255, 255), (int(p.pos.x), int(p.pos.y)), 10)
 
     # update screen changes
     display.update()
@@ -154,8 +171,7 @@ while client.is_running() == 'true':
     for agent in agents:
         if agent.dest == -1:
             next_node = (agent.src - 1) % len(graph.Nodes)
-            client.choose_next_edge(
-                '{"agent_id":'+str(agent.id)+', "next_node_id":'+str(next_node)+'}')
+            client.choose_next_edge('{"agent_id":'+str(agent.id)+', "next_node_id":'+str(next_node)+'}')
             ttl = client.time_to_end()
             print(ttl, client.get_info())
 
