@@ -1,3 +1,5 @@
+import math
+
 from GraphInterface import GraphInterface
 from node import Node
 
@@ -109,6 +111,87 @@ class DiGraph(GraphInterface):
         self.num_edges -= 1
         self.mc += 1
         return True
+
+    def getminx(self):
+        minx = float("inf")
+        for n in self.nodes.values():
+            if n.pos[0]<minx:
+                minx = n.pos[0]
+        return minx
+
+    def getminy(self):
+        miny = float("inf")
+        for n in self.nodes.values():
+            if n.pos[1]<miny:
+                miny = n.pos[1]
+        return miny
+
+    def getmaxx(self):
+        maxx = 0.0
+        for n in self.nodes.values():
+            if n.pos[0]>maxx:
+                maxx = n.pos[0]
+        return maxx
+
+    def getmaxy(self):
+        maxy = 0.0
+        for n in self.nodes.values():
+            if n.pos[1]>maxy:
+                maxy = n.pos[1]
+        return maxy
+    def checkpokesrcanddst(self, pokemon):
+        for srcn in self.nodes.values():
+            for e in srcn.out_edges:
+                dstn = self.nodes.get(e)
+                if pokemon.type == 1 :
+                    if dstn.id > srcn.id :
+                        if self.checkonedge(srcn.pos,dstn.pos,pokemon.pos):
+                            return (srcn,dstn)
+                else:
+                    if dstn.id < srcn.id :
+                        if self.checkonedge(srcn.pos,dstn.pos,pokemon.pos):
+                            return (srcn,dstn)
+
+    def checkonedge (self, srcp , dstp , pokemonp):
+        destnodes = self.edgelong(srcp,dstp)
+        destpokedest = self.edgelong(pokemonp,dstp)
+        destpokesrc =  self.edgelong(pokemonp,srcp)
+        dest = abs(destnodes-destpokesrc-destpokedest)
+        if dest<0.00001:
+            return True
+        return False
+
+    def edgelong(self, point1 , point2):
+        destx = abs(point1[0]-point2[0])
+        destx =destx*destx
+        desty = abs(point1[1] - point2[1])
+        desty = desty * desty
+        dest  = desty+destx
+        return math.sqrt(dest)
+
+    def add_pokemon(self, pokemon):
+        self.add_node(pokemon.id, pokemon.pos)
+        src, dest = self.checkpokesrcanddst(pokemon)
+        pnode = self.nodes.get(pokemon.id)
+        pnode.value = pokemon.value
+        pnode.type == pokemon.type
+        pnode.in_edges[src.id]= self.nodes.get(src.id).out_edges[dest.id]
+        src.out_edges[pnode.id] = self.nodes.get(src.id).out_edges[dest.id]
+        pnode.out_edges[dest.id] = 0
+        dest.in_edges[pnode.id] = 0
+        self.remove_edge(src,dest)
+
+    def gremove_pokemons(self):
+        removelst =[]
+        for n in self.nodes.values():
+            if n.id!=int(n.id):
+                removelst.insert(0,n.id)
+                for s in n.in_edges :
+                    for d in n.out_edges :
+                        self.add_edge(s,d,n.out_edges[d])
+        while len(removelst)!=0:
+            self.remove_node(removelst.pop())
+
     def __str__(self):
         return "Graph: |V|={}, |E|={}".format(self.num_nodes, self.num_edges)
 

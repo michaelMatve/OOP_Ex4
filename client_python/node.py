@@ -10,6 +10,8 @@ class Node:
         self.in_edges = {}
         self.out_edges = {}
         self.tag = -1
+        self.value = 0
+        self.type = 0
         self.weight = float('inf')
         self.info = 'w'
 

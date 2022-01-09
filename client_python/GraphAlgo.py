@@ -277,5 +277,31 @@ class GraphAlgo(GraphAlgoInterface):
         return True
 
 
+    def getwhereto(self,src,time):
+        self.dijkstra_algo(src)
+        max = 0
+        dst = src
+        for n in self.graph.nodes.values():
+            if n.id != src and n.weight!=float('inf'):
+                if n.value/(n.weight+time)>max:
+                    max = n.value/(n.weight+time)
+                    dst = n.id
+        if max!=0:
+            node = self.graph.nodes.get(dst)
+            while node.tag!=src:
+                node = self.graph.nodes.get(node.tag)
+            index = 0
+            if node.id!= int(node.id):
+                for i in node.out_edges:
+                    index = i
+                node = self.graph.nodes.get(index)
+            n = self.graph.nodes.get(dst)
+            for s in n.in_edges:
+                for d in n.out_edges:
+                    self.graph.add_edge(s, d, n.out_edges[d])
+            self.graph.remove_node(dst)
+            return node.id
+        return dst
+
 
 

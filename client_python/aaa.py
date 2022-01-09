@@ -1,12 +1,6 @@
-"""
-@author AchiyaZigi
-OOP - Ex4
-Very simple GUI example for python client to communicates with the server and "play the game!"
-"""
 from pokemon import Pokemon
 from agent import Agent
 from pokemon_game import Pokemon_game
-from types import SimpleNamespace
 from client import Client
 import json
 from pygame import gfxdraw
@@ -31,7 +25,6 @@ client.start_connection(HOST, PORT)
 
 FONT = pygame.font.SysFont('Arial', 20, bold=True)
 
-
 """
 from here you can change
 """
@@ -44,39 +37,20 @@ gamedata = json.loads(client.get_info())
 gamedata = gamedata['GameServer']
 myGame = Pokemon_game(gamedata)
 
-"""
-get the graph 
-
-graph_json = client.get_graph()
-graph = json.loads(graph_json, object_hook=lambda json_dict: SimpleNamespace(**json_dict)) # make graph
-for n in graph.Nodes:
-    x, y, _ = n.pos.split(',')
-    n.pos = SimpleNamespace(x=float(x), y=float(y))
-"""
 myGame.grathalgo.load_from_json(client.get_graph())
-
-"""
-get all the pokemons:
-
-pokemons = client.get_pokemons()
-pokemons_obj = json.loads(pokemons, object_hook=lambda d: SimpleNamespace(**d)) # make pokemon list?
-print(pokemons)
-"""
 
 pokemons = json.loads(client.get_pokemons())
 lstpokemon = pokemons['Pokemons']
 newlstpokemon = []
+nuid = 0.5
 for p in lstpokemon:
-    newlstpokemon.insert(0,Pokemon(p['Pokemon']))
+    newlstpokemon.insert(0,Pokemon(p['Pokemon'], nuid))
+    nuid = nuid+1
 
-
-# load the json string into SimpleNamespace Object
-"""make scale?????????????????????????????????????????????????????????????????????????????"""
- # get data proportions
-min_x = min(dict(myGame.grathalgo.graph.Nodes), key=lambda n: n.pos.x).pos.x
-min_y = min(dict(myGame.grathalgo.graph.Nodes), key=lambda n: n.pos.y).pos.y
-max_x = max(dict(myGame.grathalgo.graph.Nodes), key=lambda n: n.pos.x).pos.x
-max_y = max(dict(myGame.grathalgo.graph.Nodes), key=lambda n: n.pos.y).pos.y
+min_x = myGame.grathalgo.graph.getminx()
+min_y = myGame.grathalgo.graph.getminy()
+max_x = myGame.grathalgo.graph.getmaxx()
+max_y = myGame.grathalgo.graph.getmaxy()
 
 
 def scale(data, min_screen, max_screen, min_data, max_data):
@@ -86,9 +60,6 @@ def scale(data, min_screen, max_screen, min_data, max_data):
     """
     return ((data - min_data) / (max_data-min_data)) * (max_screen - min_screen) + min_screen
 
-
-# decorate scale with the correct values
-
 def my_scale(data, x=False, y=False):
     if x:
         return scale(data, 50, screen.get_width() - 50, min_x, max_x)
@@ -97,14 +68,7 @@ def my_scale(data, x=False, y=False):
 
 
 radius = 15
-"""
-# make all agents dick
-get all agent
-client.add_agent("{\"id\":0}")
-# client.add_agent("{\"id\":1}")
-# client.add_agent("{\"id\":2}")
-# client.add_agent("{\"id\":3}")
-"""
+
 for i in range (myGame.gamedata['agents']):
     client.add_agent("{\"id\":"+str(i)+"}")
 agents = json.loads(client.get_agents())
@@ -116,11 +80,6 @@ for i,p in enumerate (lstagents):
 # this commnad starts the server - the game is running now
 client.start()
 
-"""
-The code below should be improved significantly:
-The GUI and the "algo" are mixed - refactoring using MVC design pattern is required.
-"""
-
 while client.is_running() == 'true':
     """
     pokemons = json.loads(client.get_pokemons(),object_hook=lambda d: SimpleNamespace(**d)).Pokemons
@@ -129,13 +88,14 @@ while client.is_running() == 'true':
     pokemons = json.loads(client.get_pokemons())
     lstpokemon = pokemons['Pokemons']
     newlstpokemon = []
+    nuid = 0.5
     for p in lstpokemon:
-        newlstpokemon.insert(0, Pokemon(p['Pokemon']))
-
+        newlstpokemon.insert(0, Pokemon(p['Pokemon'], nuid))
+        nuid = nuid + 1
 
     for p in newlstpokemon:
-        x, y, _ = p.pos.split(',')
-        p.pos = (my_scale(float(x), x=True), my_scale(float(y), y=True),0)
+        x, y, _ = p.pos
+        p.pos = (my_scale(float(x), x=True), my_scale(float(y), y=True), 0)
     """
     agents = json.loads(client.get_agents(),object_hook=lambda d: SimpleNamespace(**d)).Agents
     agents = [agent.Agent for agent in agents]
@@ -147,9 +107,9 @@ while client.is_running() == 'true':
     for i, p in enumerate(lstagents):
         myGame.agents[i] = Agent(p['Agent'])
 
-    for a in myGame.agents:
-        x, y, _ = a.pos.split(',')
-        a.pos = (my_scale(float(x), x=True), my_scale(float(y), y=True),0)
+    for a in myGame.agents.values():
+        x, y, _ = a.pos
+        a.pos = (my_scale(float(x), x=True), my_scale(float(y), y=True), 0)
     # check events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -160,40 +120,38 @@ while client.is_running() == 'true':
     screen.fill(Color(0, 0, 0))
 
     # draw nodes
-    for n in myGame.grathalgo.graph.Nodes:
-
-        x = my_scale(n.pos.x, x=True)
-        y = my_scale(n.pos.y, y=True)
+    for n in myGame.grathalgo.graph.nodes.values():
+        x = my_scale(n.pos[0], x=True)
+        y = my_scale(n.pos[1], y=True)
 
         # its just to get a nice antialiased circle
-        gfxdraw.filled_circle(screen, int(x), int(y),radius, Color(64, 80, 174))
-        gfxdraw.aacircle(screen, int(x), int(y),radius, Color(255, 255, 255))
+        gfxdraw.filled_circle(screen, int(x), int(y), radius, Color(64, 80, 174))
+        gfxdraw.aacircle(screen, int(x), int(y), radius, Color(255, 255, 255))
 
         # draw the node id
         id_srf = FONT.render(str(n.id), True, Color(255, 255, 255))
         rect = id_srf.get_rect(center=(x, y))
         screen.blit(id_srf, rect)
+        for e in n.out_edges:
+            # find the edge nodes
+            src = n
+            dest = myGame.grathalgo.graph.nodes[e]
 
-    # draw edges
-    for e in myGame.grathalgo.Edges:
-        # find the edge nodes
-        src = myGame.grathalgo.graph.nodes[e.src]
-        dest = myGame.grathalgo.graph.nodes[e.dest]
+            # scaled positions
+            src_x = my_scale(src.pos[0], x=True)
+            src_y = my_scale(src.pos[1], y=True)
+            dest_x = my_scale(dest.pos[0], x=True)
+            dest_y = my_scale(dest.pos[1], y=True)
 
-        # scaled positions
-        src_x = my_scale(src.pos[0], x=True)
-        src_y = my_scale(src.pos[1], y=True)
-        dest_x = my_scale(dest.pos[0], x=True)
-        dest_y = my_scale(dest.pos[1], y=True)
+            # draw the line
+            pygame.draw.line(screen, Color(61, 72, 126), (src_x, src_y), (dest_x, dest_y))
 
-        # draw the line
-        pygame.draw.line(screen, Color(61, 72, 126),(src_x, src_y), (dest_x, dest_y))
 
     # draw agents
-    for agent in agents:
-        pygame.draw.circle(screen, Color(122, 61, 23),(int(agent.pos[0]), int(agent.pos[1])), 10)
+    for agent in myGame.agents.values():
+        pygame.draw.circle(screen, Color(122, 61, 23), (int(agent.pos[0]), int(agent.pos[1])), 10)
     # draw pokemons (note: should differ (GUI wise) between the up and the down pokemons (currently they are marked in the same way).
-    for p in pokemons:pygame.draw.circle(screen, Color(0, 255, 255), (int(p.pos.x), int(p.pos.y)), 10)
+    for p in newlstpokemon: pygame.draw.circle(screen, Color(0, 255, 255), (int(p.pos[0]), int(p.pos[1])), 10)
 
     # update screen changes
     display.update()
@@ -202,12 +160,11 @@ while client.is_running() == 'true':
     clock.tick(60)
 
     # choose next edge
-    for agent in agents:
+    for agent in myGame.agents.values():
         if agent.dest == -1:
-            next_node = (agent.src - 1) % len(graph.Nodes)
-            client.choose_next_edge('{"agent_id":'+str(agent.id)+', "next_node_id":'+str(next_node)+'}')
+            next_node = (agent.src - 1) % (myGame.grathalgo.graph.num_nodes)
+            client.choose_next_edge('{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(next_node) + '}')
             ttl = client.time_to_end()
             print(ttl, client.get_info())
 
     client.move()
-# game over:
