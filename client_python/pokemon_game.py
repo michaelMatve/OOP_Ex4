@@ -35,10 +35,3 @@ class Pokemon_game:
 
     def updateinfo(self, gamedata: dict):
         self.gamedata = gamedata
-
-    def gettimewait(self):
-        max = 0;
-        for agent in self.agents.values():
-            if agent.time>max:
-                max = agent.time
-        return max
