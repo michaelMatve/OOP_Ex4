@@ -1,10 +1,10 @@
 import json
 import random
 from typing import List
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 from GraphAlgoInterface import GraphAlgoInterface
-from DiGraph import DiGraph
+from client_python.DiGraph import DiGraph
 from node import Node
 from GraphInterface import GraphInterface
 
@@ -31,18 +31,16 @@ class GraphAlgo(GraphAlgoInterface):
         this function load a graph from json file named we get (file_name)
         return False if file and true if worked
     """
-    def load_from_json(self, file_name: str) -> bool:
+    def load_from_json(self, file_data: str) -> bool:
         try:
-            with open(file_name, 'r') as file:
-                temp_dict = json.load(file) # make dict from the json
-
+            temp_dict = json.loads(file_data) # make dict from the json
             for node in temp_dict['Nodes']: # run on all the nodes and add them to our graph
                 if node.get('pos') != None:
                     self.graph.add_node(node.get('id'), tuple(float(s) for s in node.get('pos').strip("()").split(",")))
                 else:
                     self.graph.add_node(node.get('id'))
             for edge in temp_dict['Edges']: # run on all the edges and add all the edges to our graph
-                self.graph.add_edge(edge.get('my_graph_lib'), edge.get('dest'), edge.get('w'))
+                self.graph.add_edge(edge.get('src'), edge.get('dest'), edge.get('w'))
         except IOError as e:
             print(e)
             return False
@@ -62,8 +60,8 @@ class GraphAlgo(GraphAlgoInterface):
         return True
 
     """
-        this function gets my_graph_lib and dest and return tuple of the list for the path and the distant between 
-        my_graph_lib and dest.
+        this function gets src and dest and return tuple of the list for the path and the distant between 
+        src and dest.
         if no path we return  (float("inf"),[])
     """
     def shortest_path(self, id1: int, id2: int) -> (float, list):
@@ -130,10 +128,11 @@ class GraphAlgo(GraphAlgoInterface):
         return (min_id, min)
 
 
+
     """
     this function draws the line on the screen
     """
-
+    """
     def plot_graph(self) -> None:
         for node in self.graph.nodes.values(): # go through every node in the graph
             if node.pos == None:  # if the node doesnt have a pos, creates a new pos for him
@@ -148,7 +147,7 @@ class GraphAlgo(GraphAlgoInterface):
 
         plt.show()
 
-
+    """
     """
     this function generates a random pos for the node
     """
@@ -174,7 +173,7 @@ class GraphAlgo(GraphAlgoInterface):
             else:
                 temp_dict['Nodes'].append({'id': node.id})
             for d in node.out_edges: # get all the edges and add them to the edges list
-                temp_dict['Edges'].append({'my_graph_lib': node.id, 'w': node.out_edges[d], 'dest': d})
+                temp_dict['Edges'].append({'src': node.id, 'w': node.out_edges[d], 'dest': d})
         return temp_dict
     """
         this function implement dijkstra_algo and fill the nodes data with the distant in the weight, tag= node before(if None -1
@@ -182,14 +181,14 @@ class GraphAlgo(GraphAlgoInterface):
     """
     def dijkstra_algo(self, src: int):
         self.set_tags_weight()# set all data to defult
-        run_node = self.graph.nodes.get(src) # take the my_graph_lib node
+        run_node = self.graph.nodes.get(src) # take the src node
         run_node.weight = 0.0 # set his weight to 0
         while run_node != None: #run until there are no node that wasnt visited and we can get to them every time takes the min distant
             run_node.info = 'b' # set visited
             for des in run_node.out_edges: # run on all the out edge
                 temp_node = self.graph.nodes.get(des)
                 if temp_node.info == 'w': # check if the dest was visited ar not and if not
-                    if temp_node.weight > (run_node.weight + run_node.out_edges.get(des)): #check if it get to him in smaller distant by passing the my_graph_lib(run) node if yea
+                    if temp_node.weight > (run_node.weight + run_node.out_edges.get(des)): #check if it get to him in smaller distant by passing the src(run) node if yea
                         temp_node.weight = run_node.weight + run_node.out_edges.get(des) # change his wight to the run node weight + edge weigth
                         temp_node.tag = run_node.id # change the tag to the run node id
             run_node = None # set run node to NOne

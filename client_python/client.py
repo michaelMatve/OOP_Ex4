@@ -33,7 +33,7 @@ class Client:
                     {
                         "id":0,
                         "value":0.0,
-                        "my_graph_lib":0,
+                        "src":0,
                         "dest":1,
                         "speed":1.0,
                         "pos":"35.18753053591606,32.10378225882353,0.0"
@@ -61,12 +61,12 @@ class Client:
         {
             "Edges":[
                 {
-                    "my_graph_lib":0,
+                    "src":0,
                     "w":1.4004465106761335,
                     "dest":1
                 },
                 {
-                    "my_graph_lib":0,
+                    "src":0,
                     "w":1.4620268165085584,
                     "dest":10
                 }
@@ -113,9 +113,9 @@ class Client:
     def get_pokemons(self):
         """
         returns the current pokemons state as json str.\n
-        for pokemon lying on edge (my_graph_lib,dest), then:\n
-        my_graph_lib < dest => type > 0\n
-        dest < my_graph_lib => type < 0\n
+        for pokemon lying on edge (src,dest), then:\n
+        src < dest => type > 0\n
+        dest < src => type < 0\n
         example:\n
         {
             "Pokemons":[
@@ -177,7 +177,7 @@ class Client:
         '{"agent_id":0, "next_node_id":1}'.
         Note that if\n
         1. the agent is still moving on some edge, (a.k. agent.dest != -1)
-        or 2. the "next_node_id" isn't an adjacent vertex of agent.my_graph_lib,
+        or 2. the "next_node_id" isn't an adjacent vertex of agent.src,
         then move() won't be affected by this invalid "next_node_id" choice.
         """
         res = self.__send_message("chooseNextEdge")

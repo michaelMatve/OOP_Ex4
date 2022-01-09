@@ -3,6 +3,9 @@
 OOP - Ex4
 Very simple GUI example for python client to communicates with the server and "play the game!"
 """
+from pokemon import Pokemon
+from agent import Agent
+from pokemon_game import Pokemon_game
 from types import SimpleNamespace
 from client import Client
 import json
@@ -35,12 +38,11 @@ from here you can change
 
 """
 make mygame object
-"""
-
-"""
 get info of game to object
 """
-
+gamedata = json.loads(client.get_info())
+gamedata = gamedata['GameServer']
+myGame = Pokemon_game(gamedata)
 
 """
 get the graph 
@@ -51,7 +53,7 @@ for n in graph.Nodes:
     x, y, _ = n.pos.split(',')
     n.pos = SimpleNamespace(x=float(x), y=float(y))
 """
-
+myGame.grathalgo.load_from_json(client.get_graph())
 
 """
 get all the pokemons:
@@ -61,14 +63,20 @@ pokemons_obj = json.loads(pokemons, object_hook=lambda d: SimpleNamespace(**d)) 
 print(pokemons)
 """
 
+pokemons = json.loads(client.get_pokemons())
+lstpokemon = pokemons['Pokemons']
+newlstpokemon = []
+for p in lstpokemon:
+    newlstpokemon.insert(0,Pokemon(p['Pokemon']))
+
 
 # load the json string into SimpleNamespace Object
-"""make scale"""
+"""make scale?????????????????????????????????????????????????????????????????????????????"""
  # get data proportions
-min_x = min(list(graph.Nodes), key=lambda n: n.pos.x).pos.x
-min_y = min(list(graph.Nodes), key=lambda n: n.pos.y).pos.y
-max_x = max(list(graph.Nodes), key=lambda n: n.pos.x).pos.x
-max_y = max(list(graph.Nodes), key=lambda n: n.pos.y).pos.y
+min_x = min(list(myGame.grathalgo.graph.Nodes), key=lambda n: n.pos.x).pos.x
+min_y = min(list(myGame.grathalgo.graph.Nodes), key=lambda n: n.pos.y).pos.y
+max_x = max(list(myGame.grathalgo.graph.Nodes), key=lambda n: n.pos.x).pos.x
+max_y = max(list(myGame.grathalgo.graph.Nodes), key=lambda n: n.pos.y).pos.y
 
 
 def scale(data, min_screen, max_screen, min_data, max_data):
@@ -97,6 +105,15 @@ client.add_agent("{\"id\":0}")
 # client.add_agent("{\"id\":2}")
 # client.add_agent("{\"id\":3}")
 """
+for i in range (0,myGame.gamedata['agents']):
+    client.add_agent("{\"id\":i}")
+agents = json.loads(client.get_agents())
+lstagents = agents['Agents']
+newlstagents = []
+for i,p in enumerate (lstagents):
+    myGame.agents[i]=Agent(p['Agent'])
+    print(i)
+    print(myGame.agents.get(i).id)
 
 # this commnad starts the server - the game is running now
 client.start()

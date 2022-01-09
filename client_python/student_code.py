@@ -41,7 +41,7 @@ graph = json.loads(graph_json, object_hook=lambda json_dict: SimpleNamespace(**j
 for n in graph.Nodes:
     x, y, _ = n.pos.split(',')
     n.pos = SimpleNamespace(x=float(x), y=float(y))
-
+print (graph)
  # get data proportions
 min_x = min(list(graph.Nodes), key=lambda n: n.pos.x).pos.x
 min_y = min(list(graph.Nodes), key=lambda n: n.pos.y).pos.y
