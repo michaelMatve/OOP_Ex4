@@ -129,8 +129,7 @@ try:
         """
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if pygame.mouse.get_pos()[0] >= (int(my_scale(max_x, x=True)))-50 and pygame.mouse.get_pos()[1] >= (my_scale(max_y, y=True))-50:
-                    if pygame.mouse.get_pos()[0] <= int(my_scale(max_x, x=True)) and pygame.mouse.get_pos()[1] <= my_scale(max_y, y=True):
+                if pygame.mouse.get_pos()[0] >= (int(my_scale(max_x, x=True)))-50 and pygame.mouse.get_pos()[1] >= (my_scale(max_y, y=True))-30:
                         client.stop()
                         pygame.quit()
                         exit(0)
