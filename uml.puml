@@ -1,0 +1,142 @@
+
+@startuml
+interface GraphAlgoInterface{
+        -def get_graph(self) -> GraphInterface:
+        -def load_from_json(self, file_name: str) -> bool:
+        -def save_to_json(self, file_name: str) -> bool:
+        -def shortest_path(self, id1: int, id2: int) -> (float, list):
+        -def TSP(self, node_lst: List[int]) -> (List[int], float):
+        -def centerPoint(self) -> (int, float):
+        -def plot_graph(self) -> None:
+    }
+    interface GraphInterface{
+        -def v_size(self) -> int:
+        -def e_size(self) -> int:
+        -def get_all_v(self) -> dict:
+        -def all_in_edges_of_node(self, id1: int) -> dict:
+        -def all_out_edges_of_node(self, id1: int) -> dict:
+        -def add_edge(self, id1: int, id2: int, weight: float) -> bool:
+        -def add_node(self, node_id: int, pos: tuple = None) -> bool:
+        -def remove_node(self, node_id: int) -> bool:
+        -def remove_edge(self, node_id1: int, node_id2: int) -> bool:
+    }
+
+    class DiGraph implements GraphInterface {
+        +self.nodes
+        +self.num_nodes
+        +self.num_edges
+        +self.mc
+        -def v_size(self) -> int:
+        -def e_size(self) -> int:
+        -def get_all_v(self) -> dict:
+        -def all_in_edges_of_node(self, id1: int) -> dict:
+        -def all_out_edges_of_node(self, id1: int) -> dict:
+        -def add_edge(self, id1: int, id2: int, weight: float) -> bool:
+        -def add_node(self, node_id: int, pos: tuple = None) -> bool:
+        -def remove_node(self, node_id: int) -> bool:
+        -def remove_edge(self, node_id1: int, node_id2: int) -> bool:
+        -def getminx(self)
+        -def getminy(self)
+        -def getmaxx(self)
+        -def getmaxy(self)
+        -def add_pokemon(self, pokemon)
+        -def check_poke_srcanddst(self, pokemon)
+        -def checkonedge (self, srcp , dstp , pokemonp)
+        -def edgelong(self, point1 , point2)
+        -def gremove_pokemons(self)
+
+}
+
+class GraphAlgo implements GraphAlgoInterface{
+        +self.graph = graph
+
+        -def get_graph(self) -> GraphInterface:
+        -def load_from_json(self, file_name: str) -> bool:
+        -def save_to_json(self, file_name: str) -> bool:
+        -def shortest_path(self, id1: int, id2: int) -> (float, list):
+        -def TSP(self, node_lst: List[int]) -> (List[int], float):
+        -def centerPoint(self) -> (int, float):
+        -def plot_graph(self) -> None:
+        -def random_pos(self) -> tuple:
+        -def to_json_file(self):
+        -def dijkstra_algo(self, src: int):
+        -def max_dist(self, src):
+        -def dfs(self, node : Node) -> None:se(self):
+        -def set_tags_weigth(self) -> None:
+        -def is_connected(self):
+        -def getwhereto(self,src,time)
+    }
+class Node{
+        +self.pos = pos
+        +self.id = id
+        +self.in_edges = {}
+        +self.out_edges = {}
+        +self.tag = -1
+        +self.weight = 0.0
+        +self.info = 'w'
+}
+
+
+class Agent{
+        +self.id = agentdata['id']
+        +self.value = agentdata['value']
+        +self.src = agentdata['src']
+        +self.dest = agentdata['dest']
+        +self.speed = agentdata['speed']
+        +self.pos = tuple(float(s) for s in agentdata['pos'].strip("()").split(","))
+        +self.time = 0
+
+        -def update(self, agentdata: dict)
+}
+
+
+class Client{
+        -def start_connection(self, ip, port)
+        -def __send_message(self, msg)
+        -def get_agents(self)
+        -def add_agent(self, json_of_node)
+        -def get_graph(self)
+        -def get_info(self)
+        -def get_pokemons(self)
+        -def is_running(self)
+        -def time_to_end(self)
+        -def start(self)
+        -def stop(self)
+        -def move(self)
+        -def choose_next_edge(self, next_agent_node_json)
+        -def log_in(self, id_str)
+        -def stop_connection(self)
+}
+
+class Pokemon{
+        +self.id = uid #the id use as for the grath
+        +self.value = pokemondata['value']
+        +self.type = pokemondata['type']
+        +self.pos = tuple(float(s) for s in pokemondata['pos'].strip("()").split(","))
+}
+
+class Pokemon_game{
+        +self.gamedata = gamedata
+        +self.grathalgo = GraphAlgo()
+        +self.agents = {}
+
+        -def add_pokemons(self, pokemons)
+        -def remove_pokemons(self)
+        -def add_agents(self, agents)
+        -def update_agents(self, agents)
+        -def updateinfo(self, gamedata: dict)
+        -def gettimewait(self)
+}
+
+
+
+GraphAlgo -> DiGraph
+DiGraph -> Node
+
+Pokemon_game -> Agent
+Pokemon_game -> GraphAlgo
+Pokemon_game -> Pokemon
+Pokemon_game -> Client
+
+
+@enduml
