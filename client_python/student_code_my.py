@@ -112,8 +112,6 @@ lstagents = agents['Agents']
 newlstagents = []
 for i,p in enumerate (lstagents):
     myGame.agents[i]=Agent(p['Agent'])
-    print(i)
-    print(myGame.agents.get(i).id)
 
 # this commnad starts the server - the game is running now
 client.start()
