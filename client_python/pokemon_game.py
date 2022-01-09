@@ -1,4 +1,5 @@
 from GraphAlgo import GraphAlgo
+from agent import Agent
 
 class Pokemon_game:
     def __init__(self, gamedata: dict):
@@ -17,3 +18,17 @@ class Pokemon_game:
     """
     def remove_pokemons(self):
         self.grathalgo.graph.gremove_pokemons()
+    """
+    Add all the agents to the mygame 
+    """
+    def add_agents(self, agents):
+        lstagents = agents['Agents']
+        newlstagents = []
+        for i, p in enumerate(lstagents):
+            self.agents[i] = Agent(p['Agent'])
+
+    def update_agents(self, agents):
+        lstagents = agents['Agents']
+        newlstagents = []
+        for i, p in enumerate(lstagents):
+            self.agents[i].update(p['Agent'])

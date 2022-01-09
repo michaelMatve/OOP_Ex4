@@ -92,11 +92,7 @@ for i in range (myGame.gamedata['agents']):
 """
 Add all the agents to the mygame 
 """
-agents = json.loads(client.get_agents())
-lstagents = agents['Agents']
-newlstagents = []
-for i,p in enumerate (lstagents):
-    myGame.agents[i]=Agent(p['Agent'])
+myGame.add_agents(json.loads(client.get_agents()))
 
 # this commnad starts the server - the game is running now
 client.start()
@@ -119,11 +115,7 @@ try:
         """
             update the agents.
         """
-        agents = json.loads(client.get_agents())
-        lstagents = agents['Agents']
-        newlstagents = []
-        for i, p in enumerate(lstagents):
-            myGame.agents[i].update(p['Agent'])
+        myGame.update_agents(json.loads(client.get_agents()))
 
         for a in myGame.agents.values():
             x, y, _ = a.pos
