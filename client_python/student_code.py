@@ -10,24 +10,12 @@ import pygame
 from pygame import *
 from timeit import default_timer as timer
 
-# init pygame
-WIDTH, HEIGHT = 1080, 720
-
 # default port
 PORT = 6666
 # server host (default localhost 127.0.0.1)
 HOST = '127.0.0.1'
-pygame.init()
-
-screen = display.set_mode((WIDTH, HEIGHT), depth=32, flags=RESIZABLE)
-clock = pygame.time.Clock()
-pygame.font.init()
-
 client = Client()
 client.start_connection(HOST, PORT)
-
-FONT = pygame.font.SysFont('Arial', 20, bold=True)
-
 
 """
 make mygame object
@@ -54,6 +42,32 @@ for p in lstpokemon:
     newlstpokemon2.insert(0, Pokemon(p['Pokemon'], nuid))
     newlstpokemon.insert(0,Pokemon(p['Pokemon'], nuid))
     nuid = nuid+1
+
+"""
+Add all the agents to the server
+first we will add them close to the pokemon
+and if we have no more pokemon we will put the in defult index
+"""
+for i in range (myGame.gamedata['agents']):
+    if len(newlstpokemon2) != 0:
+        src, dst = myGame.grathalgo.graph.check_poke_srcanddst(newlstpokemon2.pop())
+        client.add_agent("{\"id\":" + str(src.id) + "}")
+    else:
+        client.add_agent("{\"id\":" + str(i) + "}")
+"""
+Add all the agents to the mygame 
+"""
+myGame.add_agents(json.loads(client.get_agents()))
+
+# init pygame and set difult width and high
+WIDTH, HEIGHT = 1080, 720
+pygame.init()
+
+screen = display.set_mode((WIDTH, HEIGHT), depth=32, flags=RESIZABLE)
+clock = pygame.time.Clock()
+pygame.font.init()
+FONT = pygame.font.SysFont('Arial', 20, bold=True)
+
 """
 get min and max of node for scale
 """
@@ -78,21 +92,6 @@ def my_scale(data, x=False, y=False):
 
 
 radius = 15
-"""
-Add all the agents to the server
-first we will add them close to the pokemon
-and if we have no more pokemon we will put the in defult index
-"""
-for i in range (myGame.gamedata['agents']):
-    if len(newlstpokemon2) != 0:
-        src, dst = myGame.grathalgo.graph.check_poke_srcanddst(newlstpokemon2.pop())
-        client.add_agent("{\"id\":" + str(src.id) + "}")
-    else:
-        client.add_agent("{\"id\":" + str(i) + "}")
-"""
-Add all the agents to the mygame 
-"""
-myGame.add_agents(json.loads(client.get_agents()))
 
 # this commnad starts the server - the game is running now
 client.start()
