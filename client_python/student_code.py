@@ -1,11 +1,11 @@
-"""
-@author AchiyaZigi
-OOP - Ex4
-Very simple GUI example for python client to communicates with the server and "play the game!"
-"""
-from types import SimpleNamespace
+import time
+
+from pokemon import Pokemon
+from agent import Agent
+from pokemon_game import Pokemon_game
 from client import Client
 import json
+import time
 from pygame import gfxdraw
 import pygame
 from pygame import *
@@ -26,27 +26,41 @@ pygame.font.init()
 client = Client()
 client.start_connection(HOST, PORT)
 
-pokemons = client.get_pokemons()
-pokemons_obj = json.loads(pokemons, object_hook=lambda d: SimpleNamespace(**d))
-
-print(pokemons)
-
-graph_json = client.get_graph()
-
 FONT = pygame.font.SysFont('Arial', 20, bold=True)
-# load the json string into SimpleNamespace Object
 
-graph = json.loads(graph_json, object_hook=lambda json_dict: SimpleNamespace(**json_dict))
 
-for n in graph.Nodes:
-    x, y, _ = n.pos.split(',')
-    n.pos = SimpleNamespace(x=float(x), y=float(y))
-print (graph)
- # get data proportions
-min_x = min(list(graph.Nodes), key=lambda n: n.pos.x).pos.x
-min_y = min(list(graph.Nodes), key=lambda n: n.pos.y).pos.y
-max_x = max(list(graph.Nodes), key=lambda n: n.pos.x).pos.x
-max_y = max(list(graph.Nodes), key=lambda n: n.pos.y).pos.y
+"""
+make mygame object
+and
+get info of game to object
+"""
+gamedata = json.loads(client.get_info())
+gamedata = gamedata['GameServer']
+myGame = Pokemon_game(gamedata)
+"""
+isert the grath data to the game
+"""
+myGame.grathalgo.load_from_json(client.get_graph())
+"""
+insert first pokeomn list
+we do to list one to use for add to the grath and the other one is used to put the agents
+"""
+pokemons = json.loads(client.get_pokemons())
+lstpokemon = pokemons['Pokemons']
+newlstpokemon = []
+newlstpokemon2 = []
+nuid = 0.5
+for p in lstpokemon:
+    newlstpokemon2.insert(0, Pokemon(p['Pokemon'], nuid))
+    newlstpokemon.insert(0,Pokemon(p['Pokemon'], nuid))
+    nuid = nuid+1
+"""
+get min and max of node for scale
+"""
+min_x = myGame.grathalgo.graph.getminx()
+min_y = myGame.grathalgo.graph.getminy()
+max_x = myGame.grathalgo.graph.getmaxx()
+max_y = myGame.grathalgo.graph.getmaxy()
 
 
 def scale(data, min_screen, max_screen, min_data, max_data):
@@ -56,9 +70,6 @@ def scale(data, min_screen, max_screen, min_data, max_data):
     """
     return ((data - min_data) / (max_data-min_data)) * (max_screen - min_screen) + min_screen
 
-
-# decorate scale with the correct values
-
 def my_scale(data, x=False, y=False):
     if x:
         return scale(data, 50, screen.get_width() - 50, min_x, max_x)
@@ -67,97 +78,144 @@ def my_scale(data, x=False, y=False):
 
 
 radius = 15
-
-client.add_agent("{\"id\":0}")
-# client.add_agent("{\"id\":1}")
-# client.add_agent("{\"id\":2}")
-# client.add_agent("{\"id\":3}")
+"""
+Add all the agents to the server
+first we will add them close to the pokemon
+and if we have no more pokemon we will put the in defult index
+"""
+for i in range (myGame.gamedata['agents']):
+    if len(newlstpokemon2) != 0:
+        src, dst = myGame.grathalgo.graph.check_poke_srcanddst(newlstpokemon2.pop())
+        client.add_agent("{\"id\":" + str(src.id) + "}")
+    else:
+        client.add_agent("{\"id\":" + str(i) + "}")
+"""
+Add all the agents to the mygame 
+"""
+agents = json.loads(client.get_agents())
+lstagents = agents['Agents']
+newlstagents = []
+for i,p in enumerate (lstagents):
+    myGame.agents[i]=Agent(p['Agent'])
 
 # this commnad starts the server - the game is running now
 client.start()
-
 """
-The code below should be improved significantly:
-The GUI and the "algo" are mixed - refactoring using MVC design pattern is required.
+we use try becouse if the time will finished we could not go to the server and we will close the game
 """
+try:
+    while client.is_running() == 'true':
+        """
+        Get all new pokemons
+        """
+        pokemons = json.loads(client.get_pokemons())
+        lstpokemon = pokemons['Pokemons']
+        newlstpokemon = []
+        nuid = 0.5
+        for p in lstpokemon:
+            newlstpokemon.insert(0, Pokemon(p['Pokemon'], nuid))
+            nuid = nuid + 1
+        num_pokemon = len(lstpokemon)
+        """
+            update the agents.
+        """
+        agents = json.loads(client.get_agents())
+        lstagents = agents['Agents']
+        newlstagents = []
+        for i, p in enumerate(lstagents):
+            myGame.agents[i].update(p['Agent'])
 
-while client.is_running() == 'true':
-    pokemons = json.loads(client.get_pokemons(),object_hook=lambda d: SimpleNamespace(**d)).Pokemons
-    pokemons = [p.Pokemon for p in pokemons]
-    for p in pokemons:
-        x, y, _ = p.pos.split(',')
-        p.pos = SimpleNamespace(x=my_scale(
-            float(x), x=True), y=my_scale(float(y), y=True))
-    agents = json.loads(client.get_agents(),
-                        object_hook=lambda d: SimpleNamespace(**d)).Agents
-    agents = [agent.Agent for agent in agents]
-    for a in agents:
-        x, y, _ = a.pos.split(',')
-        a.pos = SimpleNamespace(x=my_scale(
-            float(x), x=True), y=my_scale(float(y), y=True))
-    # check events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            exit(0)
+        for a in myGame.agents.values():
+            x, y, _ = a.pos
+            a.pos = (my_scale(float(x), x=True), my_scale(float(y), y=True), 0)
+        # check events
+        """
+        check if we finish the game
+        """
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit(0)
 
-    # refresh surface
-    screen.fill(Color(0, 0, 0))
+        # refresh surface
+        screen.fill(Color(0, 0, 0))
+        """
+        remove old pokemons
+        """
+        myGame.remove_pokemons()
+        """
+        add new pokemons
+        """
+        myGame.add_pokemons(newlstpokemon)
+        """
+        drow the grath
+        first we run other all the nodes(pokemons and realnodes)
+        """
+        for n in myGame.grathalgo.graph.nodes.values():
+            x = my_scale(n.pos[0], x=True)
+            y = my_scale(n.pos[1], y=True)
+            if n.id == int(n.id):# check if the node is pokemon ar not we know pokemon id is float and node id is round int
+                gfxdraw.filled_circle(screen, int(x), int(y), radius, Color(64, 80, 174)) # node print in one color
+                gfxdraw.aacircle(screen, int(x), int(y), radius, Color(255, 255, 255))
+                id_srf = FONT.render(str(n.id), True, Color(255, 255, 255))
+            else:
+                if n.type != -1:# we check if the pokemon go up ar down
+                    gfxdraw.filled_circle(screen, int(x), int(y), radius, Color(255, 0, 0)) #drow in other color and write pu
+                    gfxdraw.aacircle(screen, int(x), int(y), radius, Color(255, 255, 255))
+                    id_srf = FONT.render('pu', True, Color(255, 255, 255))
+                else:
+                    gfxdraw.filled_circle(screen, int(x), int(y), radius, Color(0, 255, 0))#drow in other color and write pd
+                    gfxdraw.aacircle(screen, int(x), int(y), radius, Color(255, 255, 255))
+                    id_srf = FONT.render('pd', True, Color(255, 255, 255))
 
-    # draw nodes
-    for n in graph.Nodes:
-        x = my_scale(n.pos.x, x=True)
-        y = my_scale(n.pos.y, y=True)
+            rect = id_srf.get_rect(center=(x, y))
+            screen.blit(id_srf, rect)
+            # go other and drow all nude out edges
+            for e in n.out_edges:
+                src = n
+                dest = myGame.grathalgo.graph.nodes[e]
 
-        # its just to get a nice antialiased circle
-        gfxdraw.filled_circle(screen, int(x), int(y),
-                              radius, Color(64, 80, 174))
-        gfxdraw.aacircle(screen, int(x), int(y),
-                         radius, Color(255, 255, 255))
+                # set the x,y src and x,y dst
+                src_x = my_scale(src.pos[0], x=True)
+                src_y = my_scale(src.pos[1], y=True)
+                dest_x = my_scale(dest.pos[0], x=True)
+                dest_y = my_scale(dest.pos[1], y=True)
 
-        # draw the node id
-        id_srf = FONT.render(str(n.id), True, Color(255, 255, 255))
-        rect = id_srf.get_rect(center=(x, y))
-        screen.blit(id_srf, rect)
+                # draw the line
+                pygame.draw.line(screen, Color(61, 72, 126), (src_x, src_y), (dest_x, dest_y))
 
-    # draw edges
-    for e in graph.Edges:
-        # find the edge nodes
-        src = next(n for n in graph.Nodes if n.id == e.src)
-        dest = next(n for n in graph.Nodes if n.id == e.dest)
+        # draw agents
+        for agent in myGame.agents.values():
+            pygame.draw.circle(screen, Color(122, 61, 23), (int(agent.pos[0]), int(agent.pos[1])), 10)
+        # and we update the scream
+        display.update()
 
-        # scaled positions
-        src_x = my_scale(src.pos.x, x=True)
-        src_y = my_scale(src.pos.y, y=True)
-        dest_x = my_scale(dest.pos.x, x=True)
-        dest_y = my_scale(dest.pos.y, y=True)
+        # refresh rate
+        clock.tick(60)
 
-        # draw the line
-        pygame.draw.line(screen, Color(61, 72, 126),
-                         (src_x, src_y), (dest_x, dest_y))
+        """
+        now we check for every egent what should be his next move by makeing dikstra on the agent src we find the most valued
+        place to go (most value == value/time).
+        if the nude is still moving we just take down the pokemon from the grafe (becouse we want that two agent will not go to same 
+        pokemon)
+        if the node isnt moveing we take the pokemon from the grafe and tell him to go to the next node in the way.
+        """
+        for agent in myGame.agents.values():
+            if agent.dest == -1:
+                next_node = myGame.grathalgo.getwhereto(agent.src, 0)
+                if agent.src != next_node:
+                    client.choose_next_edge('{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(next_node) + '}')
+                ttl = client.time_to_end()
+                print(ttl, client.get_info())
+            else:
+                next_node = myGame.grathalgo.getwhereto(agent.dest, agent.time)
+                if agent.src != next_node:
+                    client.choose_next_edge('{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(next_node) + '}')
+                ttl = client.time_to_end()
+                print(ttl, client.get_info())
 
-    # draw agents
-    for agent in agents:
-        pygame.draw.circle(screen, Color(122, 61, 23),
-                           (int(agent.pos.x), int(agent.pos.y)), 10)
-    # draw pokemons (note: should differ (GUI wise) between the up and the down pokemons (currently they are marked in the same way).
-    for p in pokemons:
-        pygame.draw.circle(screen, Color(0, 255, 255), (int(p.pos.x), int(p.pos.y)), 10)
-
-    # update screen changes
-    display.update()
-
-    # refresh rate
-    clock.tick(60)
-
-    # choose next edge
-    for agent in agents:
-        if agent.dest == -1:
-            next_node = (agent.src - 1) % len(graph.Nodes)
-            client.choose_next_edge(
-                '{"agent_id":'+str(agent.id)+', "next_node_id":'+str(next_node)+'}')
-            ttl = client.time_to_end()
-            print(ttl, client.get_info())
-
-    client.move()
+        client.move()
+except IOError as e:
+    pygame.quit()
+    exit(0)
 # game over:

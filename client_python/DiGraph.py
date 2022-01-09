@@ -111,56 +111,85 @@ class DiGraph(GraphInterface):
         self.num_edges -= 1
         self.mc += 1
         return True
-
+    """
+    get min x of nodes pos
+    """
     def getminx(self):
         minx = float("inf")
         for n in self.nodes.values():
             if n.pos[0]<minx:
                 minx = n.pos[0]
         return minx
-
+    """
+    get min y of nodes pos
+    """
     def getminy(self):
         miny = float("inf")
         for n in self.nodes.values():
             if n.pos[1]<miny:
                 miny = n.pos[1]
         return miny
-
+    """
+    get max x of nodes pos
+    """
     def getmaxx(self):
         maxx = 0.0
         for n in self.nodes.values():
             if n.pos[0]>maxx:
                 maxx = n.pos[0]
         return maxx
-
+    """
+    get max y of nodes pos
+    """
     def getmaxy(self):
         maxy = 0.0
         for n in self.nodes.values():
             if n.pos[1]>maxy:
                 maxy = n.pos[1]
         return maxy
-    def checkpokesrcanddst(self, pokemon):
-        for srcn in self.nodes.values():
-            for e in srcn.out_edges:
+    """
+    function that add pokemon to the grath as node with value and type
+    """
+    def add_pokemon(self, pokemon):
+        self.add_node(pokemon.id, pokemon.pos)
+        src, dest = self.check_poke_srcanddst(pokemon) #get the nude src and dest of the edge that the pokemon on (ruple(node src, node dest)
+        pnode = self.nodes.get(pokemon.id)
+        pnode.value = pokemon.value
+        pnode.type = pokemon.type
+        pnode.in_edges[src.id]= self.nodes.get(src.id).out_edges[dest.id] # make new edge between src to pokemon
+        src.out_edges[pnode.id] = self.nodes.get(src.id).out_edges[dest.id] # make new edge between src to pokemon
+        pnode.out_edges[dest.id] = 0 # make new edge between pokemon to dst
+        dest.in_edges[pnode.id] = 0 # make new edge between src to pokemon
+        self.remove_edge(src,dest) # remove the edge that doesnt contain the poemon
+    """
+    find the nude src and dest of the edge that the pokemon on
+    """
+    def check_poke_srcanddst(self, pokemon):
+        for srcn in self.nodes.values():#run on all the nodes
+            for e in srcn.out_edges:# run on all his out edges
                 dstn = self.nodes.get(e)
-                if pokemon.type == 1 :
-                    if dstn.id > srcn.id :
-                        if self.checkonedge(srcn.pos,dstn.pos,pokemon.pos):
-                            return (srcn,dstn)
+                if pokemon.type == 1 : # check if the pokemon go up ar down
+                    if dstn.id > srcn.id : #check if the diraction of the node is right
+                        if self.checkonedge(srcn.pos,dstn.pos,pokemon.pos): # check if the pokemon is on the edge
+                            return (srcn,dstn) # return tuple contain the src node and the dest node of the edge
                 else:
-                    if dstn.id < srcn.id :
-                        if self.checkonedge(srcn.pos,dstn.pos,pokemon.pos):
-                            return (srcn,dstn)
-
+                    if dstn.id < srcn.id :#check if the diraction of the node is right
+                        if self.checkonedge(srcn.pos,dstn.pos,pokemon.pos): # check if the pokemon is on the edge
+                            return (srcn,dstn) # return tuple contain the src node and the dest node of the edge
+    """
+    get the nodes and pokemon pos and return true if the pokemon is on the edge else false
+    """
     def checkonedge (self, srcp , dstp , pokemonp):
         destnodes = self.edgelong(srcp,dstp)
         destpokedest = self.edgelong(pokemonp,dstp)
         destpokesrc =  self.edgelong(pokemonp,srcp)
         dest = abs(destnodes-destpokesrc-destpokedest)
-        if dest<0.00001:
+        if dest<0.00001:# if the dst of the nodes - the dst of the src to pokemon and the dst of the pokemon to the dst equal to 0
             return True
         return False
-
+    """
+    calculate the dist between 2 points 
+    """
     def edgelong(self, point1 , point2):
         destx = abs(point1[0]-point2[0])
         destx =destx*destx
@@ -168,27 +197,17 @@ class DiGraph(GraphInterface):
         desty = desty * desty
         dest  = desty+destx
         return math.sqrt(dest)
-
-    def add_pokemon(self, pokemon):
-        self.add_node(pokemon.id, pokemon.pos)
-        src, dest = self.checkpokesrcanddst(pokemon)
-        pnode = self.nodes.get(pokemon.id)
-        pnode.value = pokemon.value
-        pnode.type == pokemon.type
-        pnode.in_edges[src.id]= self.nodes.get(src.id).out_edges[dest.id]
-        src.out_edges[pnode.id] = self.nodes.get(src.id).out_edges[dest.id]
-        pnode.out_edges[dest.id] = 0
-        dest.in_edges[pnode.id] = 0
-        self.remove_edge(src,dest)
-
+    """
+        removes the pokemons from the grath
+    """
     def gremove_pokemons(self):
-        removelst =[]
+        removelst =[]# make new list to save all the pokemons id
         for n in self.nodes.values():
             if n.id!=int(n.id):
                 removelst.insert(0,n.id)
                 for s in n.in_edges :
                     for d in n.out_edges :
-                        self.add_edge(s,d,n.out_edges[d])
+                        self.add_edge(s,d,n.in_edges[s])
         while len(removelst)!=0:
             self.remove_node(removelst.pop())
 

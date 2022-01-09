@@ -276,7 +276,13 @@ class GraphAlgo(GraphAlgoInterface):
         self.get_transpose() # returns the graph to it original form
         return True
 
-
+    """
+        this function return the next node id that the agent need to go to in order to get to
+        the most valued pokemon
+        every time agent choose a pokemon we remove him from the grath becouse we dont wasnt that 2 agents will choose
+        the same pokemon
+        if no pokemon to go we dont move
+    """
     def getwhereto(self,src,time):
         self.dijkstra_algo(src)
         max = 0
