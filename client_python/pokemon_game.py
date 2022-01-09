@@ -32,3 +32,13 @@ class Pokemon_game:
         newlstagents = []
         for i, p in enumerate(lstagents):
             self.agents[i].update(p['Agent'])
+
+    def updateinfo(self, gamedata: dict):
+        self.gamedata = gamedata
+
+    def gettimewait(self):
+        max = 0;
+        for agent in self.agents.values():
+            if agent.time>max:
+                max = agent.time
+        return max

@@ -1,5 +1,4 @@
 import time
-
 from pokemon import Pokemon
 from agent import Agent
 from pokemon_game import Pokemon_game
@@ -9,6 +8,7 @@ import time
 from pygame import gfxdraw
 import pygame
 from pygame import *
+from timeit import default_timer as timer
 
 # init pygame
 WIDTH, HEIGHT = 1080, 720
@@ -38,7 +38,7 @@ gamedata = json.loads(client.get_info())
 gamedata = gamedata['GameServer']
 myGame = Pokemon_game(gamedata)
 """
-isert the grath data to the game
+insert the grath data to the game
 """
 myGame.grathalgo.load_from_json(client.get_graph())
 """
@@ -99,11 +99,14 @@ client.start()
 """
 we use try becouse if the time will finished we could not go to the server and we will close the game
 """
+first_time = int(client.time_to_end())
 try:
     while client.is_running() == 'true':
         """
         Get all new pokemons
         """
+        gamedata = json.loads(client.get_info())
+        myGame.updateinfo(gamedata['GameServer'])
         pokemons = json.loads(client.get_pokemons())
         lstpokemon = pokemons['Pokemons']
         newlstpokemon = []
@@ -125,6 +128,12 @@ try:
         check if we finish the game
         """
         for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if pygame.mouse.get_pos()[0] >= (int(my_scale(max_x, x=True)))-50 and pygame.mouse.get_pos()[1] >= (my_scale(max_y, y=True))-50:
+                    if pygame.mouse.get_pos()[0] <= int(my_scale(max_x, x=True)) and pygame.mouse.get_pos()[1] <= my_scale(max_y, y=True):
+                        client.stop()
+                        pygame.quit()
+                        exit(0)
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit(0)
@@ -178,12 +187,57 @@ try:
 
         # draw agents
         for agent in myGame.agents.values():
-            pygame.draw.circle(screen, Color(122, 61, 23), (int(agent.pos[0]), int(agent.pos[1])), 10)
+            gfxdraw.filled_circle(screen, (int(agent.pos[0])),int(agent.pos[1]), radius, Color(70, 80, 80))
+            gfxdraw.aacircle(screen, int(x), int(y), radius, Color(255, 255, 255))
+            id_srf = FONT.render(str(agent.id), True, Color(255, 255, 255))
+            rect = id_srf.get_rect(center=((int(agent.pos[0])),int(agent.pos[1])))
+            screen.blit(id_srf, rect)
+
+        """
+        drow moves 
+        """
+        id_srf = FONT.render('moves:', True, Color(255, 255, 255))
+        rect = id_srf.get_rect(center=(((int(my_scale(max_x, x=True))) - 50), int((my_scale(max_y, y=True))) - 120))
+        screen.blit(id_srf, rect)
+
+        id_srf = FONT.render(str(str(myGame.gamedata['moves'])), True, Color(255, 255, 255))
+        rect = id_srf.get_rect(center=(((int(my_scale(max_x, x=True)))), int((my_scale(max_y, y=True))) - 120))
+        screen.blit(id_srf, rect)
+
+        """
+        drow ttl 
+        """
+        id_srf = FONT.render('ttl:', True, Color(255, 255, 255))
+        rect = id_srf.get_rect(center=(((int(my_scale(max_x, x=True)))-50), int((my_scale(max_y, y=True))) - 40))
+        screen.blit(id_srf, rect)
+
+        id_srf = FONT.render(str(client.time_to_end()), True, Color(255, 255, 255))
+        rect = id_srf.get_rect(center=(((int(my_scale(max_x, x=True)))), int((my_scale(max_y, y=True))) - 40))
+        screen.blit(id_srf, rect)
+        """
+        drow grade
+        """
+        id_srf = FONT.render('grade:', True, Color(255, 255, 255))
+        rect = id_srf.get_rect(center=(((int(my_scale(max_x, x=True))) - 50), int((my_scale(max_y, y=True))) - 80))
+        screen.blit(id_srf, rect)
+
+        id_srf = FONT.render(str(myGame.gamedata['grade']), True, Color(255, 255, 255))
+        rect = id_srf.get_rect(center=(((int(my_scale(max_x, x=True)))), int((my_scale(max_y, y=True))) - 80))
+        screen.blit(id_srf, rect)
+
+        """
+        drow buttomcd 
+        """
+        FONT1 = pygame.font.SysFont('Arial', 30, bold=True)
+        id_srf = FONT1.render(str('stop'), True, Color(255, 255, 255))
+        stopButtom = id_srf.get_rect(center=(((int(my_scale(max_x, x=True)))), int((my_scale(max_y, y=True)))))
+        screen.blit(id_srf, stopButtom)
+
         # and we update the scream
         display.update()
 
-        # refresh rate
-        clock.tick(60)
+        # refresh rate  10 times in secend becouse we dont want to cal the server more then 10 times in sec
+        clock.tick(10)
 
         """
         now we check for every egent what should be his next move by makeing dikstra on the agent src we find the most valued
@@ -195,18 +249,17 @@ try:
         for agent in myGame.agents.values():
             if agent.dest == -1:
                 next_node = myGame.grathalgo.getwhereto(agent.src, 0)
+                temptime = myGame.grathalgo.graph.nodes.get(agent.src).out_edges[next_node]
+                agent.time = temptime/agent.speed*200
                 if agent.src != next_node:
                     client.choose_next_edge('{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(next_node) + '}')
-                ttl = client.time_to_end()
-                print(ttl, client.get_info())
             else:
                 next_node = myGame.grathalgo.getwhereto(agent.dest, agent.time)
                 if agent.src != next_node:
                     client.choose_next_edge('{"agent_id":' + str(agent.id) + ', "next_node_id":' + str(next_node) + '}')
-                ttl = client.time_to_end()
-                print(ttl, client.get_info())
-
         client.move()
+
+
 except IOError as e:
     pygame.quit()
     exit(0)

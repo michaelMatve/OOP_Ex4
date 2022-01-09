@@ -16,3 +16,4 @@ class Agent:
         self.dest = agentdata['dest']
         self.speed = agentdata['speed']
         self.pos = tuple(float(s) for s in agentdata['pos'].strip("()").split(","))
+        self.time = 0
